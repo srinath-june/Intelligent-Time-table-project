@@ -1,0 +1,245 @@
+{
+  "days": [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday"
+  ],
+  "periods": [
+    "08:30 - 09:30",
+    "09:30 - 10:30",
+    "10:30 - 11:30",
+    "11:30 - 12:30",
+    "13:30 - 14:30",
+    "14:30 - 15:30"
+  ],
+  "rooms": [
+    {
+      "id": "LH-101",
+      "name": "Auditorium 101",
+      "capacity": 100,
+      "room_type": "Lecture"
+    },
+    {
+      "id": "LH-102",
+      "name": "Lecture Hall 102",
+      "capacity": 60,
+      "room_type": "Lecture"
+    },
+    {
+      "id": "LH-103",
+      "name": "Lecture Hall 103",
+      "capacity": 60,
+      "room_type": "Lecture"
+    },
+    {
+      "id": "LAB-CS1",
+      "name": "AI & Software Lab",
+      "capacity": 50,
+      "room_type": "Lab"
+    },
+    {
+      "id": "LAB-CS2",
+      "name": "Networking Lab",
+      "capacity": 50,
+      "room_type": "Lab"
+    },
+    {
+      "id": "LAB-PHY",
+      "name": "Advanced Physics Lab",
+      "capacity": 50,
+      "room_type": "Lab"
+    }
+  ],
+  "teachers": [
+    {
+      "id": "T1",
+      "name": "Dr. Alan Turing",
+      "max_hours_per_day": 4,
+      "subjects": [
+        "CS101",
+        "CS301"
+      ]
+    },
+    {
+      "id": "T2",
+      "name": "Prof. Grace Hopper",
+      "max_hours_per_day": 4,
+      "subjects": [
+        "CS102",
+        "CS102L"
+      ]
+    },
+    {
+      "id": "T3",
+      "name": "Dr. Nikola Tesla",
+      "max_hours_per_day": 4,
+      "subjects": [
+        "EE101",
+        "EE101L"
+      ]
+    },
+    {
+      "id": "T4",
+      "name": "Dr. Ada Lovelace",
+      "max_hours_per_day": 4,
+      "subjects": [
+        "MATH101",
+        "MATH201"
+      ]
+    },
+    {
+      "id": "T5",
+      "name": "Prof. Marie Curie",
+      "max_hours_per_day": 4,
+      "subjects": [
+        "PHY101",
+        "PHY101L"
+      ]
+    },
+    {
+      "id": "T6",
+      "name": "Dr. Claude Shannon",
+      "max_hours_per_day": 4,
+      "subjects": [
+        "CS201",
+        "CS201L"
+      ]
+    }
+  ],
+  "subjects": [
+    {
+      "id": "CS101",
+      "code": "CS101",
+      "name": "Intro to Programming",
+      "weekly_frequency": 4,
+      "subject_type": "Lecture"
+    },
+    {
+      "id": "CS102",
+      "code": "CS102",
+      "name": "Data Structures",
+      "weekly_frequency": 3,
+      "subject_type": "Lecture"
+    },
+    {
+      "id": "CS102L",
+      "code": "CS102L",
+      "name": "Data Structures Lab",
+      "weekly_frequency": 2,
+      "subject_type": "Lab"
+    },
+    {
+      "id": "CS201",
+      "code": "CS201",
+      "name": "Database Systems",
+      "weekly_frequency": 3,
+      "subject_type": "Lecture"
+    },
+    {
+      "id": "CS201L",
+      "code": "CS201L",
+      "name": "Database Lab",
+      "weekly_frequency": 2,
+      "subject_type": "Lab"
+    },
+    {
+      "id": "CS301",
+      "code": "CS301",
+      "name": "Artificial Intelligence",
+      "weekly_frequency": 3,
+      "subject_type": "Lecture"
+    },
+    {
+      "id": "MATH101",
+      "code": "MATH101",
+      "name": "Calculus & Algebra",
+      "weekly_frequency": 4,
+      "subject_type": "Lecture"
+    },
+    {
+      "id": "MATH201",
+      "code": "MATH201",
+      "name": "Discrete Mathematics",
+      "weekly_frequency": 3,
+      "subject_type": "Lecture"
+    },
+    {
+      "id": "EE101",
+      "code": "EE101",
+      "name": "Basic Electronics",
+      "weekly_frequency": 3,
+      "subject_type": "Lecture"
+    },
+    {
+      "id": "EE101L",
+      "code": "EE101L",
+      "name": "Electronics Lab",
+      "weekly_frequency": 2,
+      "subject_type": "Lab"
+    },
+    {
+      "id": "PHY101",
+      "code": "PHY101",
+      "name": "Applied Physics",
+      "weekly_frequency": 3,
+      "subject_type": "Lecture"
+    },
+    {
+      "id": "PHY101L",
+      "code": "PHY101L",
+      "name": "Physics Practicum",
+      "weekly_frequency": 2,
+      "subject_type": "Lab"
+    }
+  ],
+  "classes": [
+    {
+      "id": "CS-YEAR1",
+      "name": "CS Year 1 (Sec A)",
+      "student_count": 55,
+      "subjects": [
+        "CS101",
+        "MATH101",
+        "PHY101",
+        "PHY101L"
+      ]
+    },
+    {
+      "id": "CS-YEAR2",
+      "name": "CS Year 2 (Sec A)",
+      "student_count": 48,
+      "subjects": [
+        "CS102",
+        "CS102L",
+        "CS201",
+        "CS201L",
+        "MATH201"
+      ]
+    },
+    {
+      "id": "CS-YEAR3",
+      "name": "CS Year 3 (Sec A)",
+      "student_count": 42,
+      "subjects": [
+        "CS301",
+        "CS201",
+        "MATH201",
+        "EE101"
+      ]
+    },
+    {
+      "id": "EE-YEAR1",
+      "name": "EE Year 1 (Sec A)",
+      "student_count": 45,
+      "subjects": [
+        "MATH101",
+        "EE101",
+        "EE101L",
+        "PHY101",
+        "PHY101L"
+      ]
+    }
+  ]
+}

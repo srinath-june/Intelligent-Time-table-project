@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Timetable Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="header-left">
+            <div class="logo-icon">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div>
+                <h1>Intelligent Timetable Generator</h1>
+                <p class="subtitle">AI Constraint Satisfaction & Genetic Solver Engine</p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <select id="preset-selector" class="preset-select">
+                <option value="university">🎓 University CS Preset</option>
+                <option value="school">🏫 High School Preset</option>
+            </select>
+            <button id="btn-generate-top" class="btn btn-primary btn-glow">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Timetable
+            </button>
+            <button id="btn-reset-data" class="btn btn-secondary" title="Reset sample data">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+            <button id="btn-export-csv" class="btn btn-outline">
+                <i class="fa-solid fa-file-csv"></i> CSV
+            </button>
+            <button id="btn-print" class="btn btn-outline">
+                <i class="fa-solid fa-print"></i> Print
+            </button>
+        </div>
+    </header>
+
+    <main class="app-container">
+        
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-icon icon-fitness">
+                    <i class="fa-solid fa-bullseye"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Fitness Score</span>
+                    <span class="stat-value" id="stat-fitness">0 / 1000</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="fitness-progress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon icon-hard">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Hard Conflicts</span>
+                    <span class="stat-value text-danger" id="stat-hard-conflicts">0</span>
+                    <span class="stat-subtext">Must be 0 for valid schedule</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon icon-soft">
+                    <i class="fa-solid fa-circle-info"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Soft Warnings</span>
+                    <span class="stat-value text-warning" id="stat-soft-warnings">0</span>
+                    <span class="stat-subtext">Optimized preferences</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon icon-time">
+                    <i class="fa-solid fa-stopwatch"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Execution Time</span>
+                    <span class="stat-value text-accent" id="stat-exec-time">0.00 s</span>
+                    <span class="stat-subtext">Genetic Engine speed</span>
+                </div>
+            </div>
+        </div>
+
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="tab-grid">
+                <i class="fa-solid fa-table-cells"></i> Interactive Grid (Drag & Drop)
+            </button>
+            <button class="tab-btn" data-tab="tab-analytics">
+                <i class="fa-solid fa-chart-pie"></i> Analytics & Workload
+            </button>
+            <button class="tab-btn" data-tab="tab-solver">
+                <i class="fa-solid fa-sliders"></i> Genetic AI Solver
+            </button>
+            <button class="tab-btn" data-tab="tab-data">
+                <i class="fa-solid fa-database"></i> Data Management
+            </button>
+            <button class="tab-btn" data-tab="tab-analyzer">
+                <i class="fa-solid fa-shield-halved"></i> Conflict Inspector
+            </button>
+        </nav>
+
+        <section id="tab-grid" class="tab-content active">
+            <div class="grid-controls">
+                <div class="control-group">
+                    <label><i class="fa-solid fa-eye"></i> View Mode:</label>
+                    <select id="view-mode-select">
+                        <option value="class">View by Student Class / Section</option>
+                        <option value="teacher">View by Teacher</option>
+                        <option value="room">View by Room</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label><i class="fa-solid fa-filter"></i> Target Entity:</label>
+                    <select id="view-target-select"></select>
+                </div>
+
+                <div class="legend-bar">
+                    <span class="legend-item"><span class="legend-badge badge-lecture"></span> Lecture</span>
+                    <span class="legend-item"><span class="legend-badge badge-lab"></span> Lab</span>
+                    <span class="legend-item"><span class="legend-badge badge-empty"></span> Free Slot (Drag target)</span>
+                </div>
+            </div>
+
+            <div class="drag-hint">
+                <i class="fa-solid fa-hand-pointer text-accent"></i> Tip: Drag and drop subject blocks into free slots to re-arrange schedules!
+            </div>
+
+            <div class="table-wrapper">
+                <table class="timetable-grid" id="timetable-matrix">
+                    <thead>
+                        <tr id="matrix-header-row">
+                            <th>Time / Day</th>
+                            <th>Monday</th>
+                            <th>Tuesday</th>
+                            <th>Wednesday</th>
+                            <th>Thursday</th>
+                            <th>Friday</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timetable-tbody">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <i class="fa-solid fa-calendar-xmark"></i>
+                                <p>No timetable generated yet. Click <strong>Generate Timetable</strong> to run the AI engine.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="tab-analytics" class="tab-content">
+            <div class="analytics-grid">
+                <div class="card card-glass">
+                    <h2><i class="fa-solid fa-chart-line text-accent"></i> Genetic Evolution Curve</h2>
+                    <p class="card-desc">Fitness trajectory over iterations (Generations vs Score)</p>
+                    <div class="chart-container">
+                        <canvas id="canvas-evolution" width="600" height="240"></canvas>
+                    </div>
+                </div>
+
+                <div class="card card-glass">
+                    <h2><i class="fa-solid fa-door-open text-primary"></i> Room Utilization Rate</h2>
+                    <p class="card-desc">Percentage of total period capacity used per room</p>
+                    <div id="analytics-rooms" class="analytics-list"></div>
+                </div>
+
+                <div class="card card-glass card-full">
+                    <h2><i class="fa-solid fa-user-tie text-success"></i> Teacher Workload Distribution</h2>
+                    <p class="card-desc">Total weekly teaching hours assigned per instructor</p>
+                    <div id="analytics-teachers" class="teacher-workload-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-solver" class="tab-content">
+            <div class="solver-panel">
+                <div class="card card-glass">
+                    <h2><i class="fa-solid fa-microchip"></i> Genetic Algorithm Parameters</h2>
+                    <p class="card-desc">Fine-tune the stochastic evolutionary search parameters.</p>
+                    
+                    <form id="solver-config-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="input-pop-size">Population Size:</label>
+                                <input type="number" id="input-pop-size" value="60" min="10" max="300">
+                                <small>Number of candidate chromosomes in each generation pool.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="input-generations">Max Generations:</label>
+                                <input type="number" id="input-generations" value="200" min="20" max="1000">
+                                <small>Maximum evolutionary iteration loops.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="input-mutation">Mutation Rate:</label>
+                                <input type="number" id="input-mutation" value="0.20" step="0.05" min="0.01" max="0.8">
+                                <small>Probability of smart gene modification.</small>
+                            </div>
+                        </div>
+
+                        <div class="solver-actions">
+                            <button type="button" id="btn-run-solver" class="btn btn-primary btn-large">
+                                <i class="fa-solid fa-play"></i> Run Timetable Engine
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card card-glass">
+                    <h2><i class="fa-solid fa-circle-check"></i> Constraint Definitions</h2>
+                    <div class="constraints-list">
+                        <div class="constraint-item hard">
+                            <i class="fa-solid fa-lock"></i>
+                            <div>
+                                <strong>No Teacher Double-Booking (Hard)</strong>
+                                <p>A teacher cannot teach two classes simultaneously.</p>
+                            </div>
+                        </div>
+                        <div class="constraint-item hard">
+                            <i class="fa-solid fa-lock"></i>
+                            <div>
+                                <strong>No Room Double-Booking (Hard)</strong>
+                                <p>A room cannot host multiple subjects at the same period.</p>
+                            </div>
+                        </div>
+                        <div class="constraint-item hard">
+                            <i class="fa-solid fa-lock"></i>
+                            <div>
+                                <strong>No Class Double-Booking (Hard)</strong>
+                                <p>A class section cannot have two subjects assigned simultaneously.</p>
+                            </div>
+                        </div>
+                        <div class="constraint-item hard">
+                            <i class="fa-solid fa-lock"></i>
+                            <div>
+                                <strong>Room Type & Capacity (Hard)</strong>
+                                <p>Labs require Lab rooms; room capacity must accommodate class size.</p>
+                            </div>
+                        </div>
+                        <div class="constraint-item soft">
+                            <i class="fa-solid fa-sliders"></i>
+                            <div>
+                                <strong>Teacher Workload Cap (Soft)</strong>
+                                <p>Avoid exceeding instructor daily maximum teaching hours.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-data" class="tab-content">
+            <div class="data-manager-layout">
+                <div class="data-tabs">
+                    <button class="data-tab-btn active" data-subtab="data-classes">Classes</button>
+                    <button class="data-tab-btn" data-subtab="data-teachers">Teachers</button>
+                    <button class="data-tab-btn" data-subtab="data-subjects">Subjects</button>
+                    <button class="data-tab-btn" data-subtab="data-rooms">Rooms</button>
+                </div>
+
+                <div class="data-tab-body">
+                    <div id="data-classes" class="subtab-content active">
+                        <div class="subtab-header">
+                            <h3>Student Classes / Sections</h3>
+                            <button class="btn btn-sm btn-primary" onclick="openModal('modal-class')"><i class="fa-solid fa-plus"></i> Add Class</button>
+                        </div>
+                        <div id="list-classes" class="entity-cards"></div>
+                    </div>
+
+                    <div id="data-teachers" class="subtab-content">
+                        <div class="subtab-header">
+                            <h3>Faculty & Teachers</h3>
+                            <button class="btn btn-sm btn-primary" onclick="openModal('modal-teacher')"><i class="fa-solid fa-plus"></i> Add Teacher</button>
+                        </div>
+                        <div id="list-teachers" class="entity-cards"></div>
+                    </div>
+
+                    <div id="data-subjects" class="subtab-content">
+                        <div class="subtab-header">
+                            <h3>Courses & Subjects</h3>
+                            <button class="btn btn-sm btn-primary" onclick="openModal('modal-subject')"><i class="fa-solid fa-plus"></i> Add Subject</button>
+                        </div>
+                        <div id="list-subjects" class="entity-cards"></div>
+                    </div>
+
+                    <div id="data-rooms" class="subtab-content">
+                        <div class="subtab-header">
+                            <h3>Rooms & Labs</h3>
+                            <button class="btn btn-sm btn-primary" onclick="openModal('modal-room')"><i class="fa-solid fa-plus"></i> Add Room</button>
+                        </div>
+                        <div id="list-rooms" class="entity-cards"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-analyzer" class="tab-content">
+            <div class="analyzer-container">
+                <div class="card card-glass">
+                    <h2><i class="fa-solid fa-triangle-exclamation text-danger"></i> Hard Constraint Violations</h2>
+                    <div id="hard-violations-list" class="violations-box">
+                        <div class="no-issues"><i class="fa-solid fa-circle-check text-success"></i> No hard violations detected!</div>
+                    </div>
+                </div>
+
+                <div class="card card-glass">
+                    <h2><i class="fa-solid fa-circle-info text-warning"></i> Soft Constraint Recommendations</h2>
+                    <div id="soft-violations-list" class="violations-box">
+                        <div class="no-issues"><i class="fa-solid fa-circle-check text-success"></i> Schedule is fully optimized!</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="modal-edit-slot" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-pen-to-square"></i> Edit Timetable Slot</h3>
+                <span class="close-modal" onclick="closeModal('modal-edit-slot')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-edit-slot">
+                    <input type="hidden" id="edit-slot-id">
+                    <div class="form-group">
+                        <label>Class Section:</label>
+                        <input type="text" id="edit-slot-class" readonly class="input-readonly">
+                    </div>
+                    <div class="form-group">
+                        <label>Subject:</label>
+                        <select id="edit-slot-subject"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Teacher:</label>
+                        <select id="edit-slot-teacher"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Room:</label>
+                        <select id="edit-slot-room"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Day:</label>
+                        <select id="edit-slot-day"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Period:</label>
+                        <select id="edit-slot-period"></select>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-slot')">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-class" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Class Section</h3>
+                <span class="close-modal" onclick="closeModal('modal-class')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-class">
+                    <div class="form-group">
+                        <label>Class ID (e.g. CS-3A):</label>
+                        <input type="text" id="new-class-id" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Class Name:</label>
+                        <input type="text" id="new-class-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Student Count:</label>
+                        <input type="number" id="new-class-count" value="40" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned Subjects (comma-separated IDs):</label>
+                        <input type="text" id="new-class-subjects" placeholder="CS101, MATH101, PHY101">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary">Add Class</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-teacher" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Teacher</h3>
+                <span class="close-modal" onclick="closeModal('modal-teacher')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-teacher">
+                    <div class="form-group">
+                        <label>Teacher ID (e.g. T6):</label>
+                        <input type="text" id="new-teacher-id" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name:</label>
+                        <input type="text" id="new-teacher-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Hours / Day:</label>
+                        <input type="number" id="new-teacher-max" value="4" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Can Teach Subjects (comma-separated IDs):</label>
+                        <input type="text" id="new-teacher-subjects" placeholder="CS101, CS102">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary">Add Teacher</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-subject" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Subject</h3>
+                <span class="close-modal" onclick="closeModal('modal-subject')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-subject">
+                    <div class="form-group">
+                        <label>Subject Code / ID (e.g. MATH102):</label>
+                        <input type="text" id="new-subj-id" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Subject Name:</label>
+                        <input type="text" id="new-subj-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Weekly Frequency (Hours/Week):</label>
+                        <input type="number" id="new-subj-freq" value="3" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Type:</label>
+                        <select id="new-subj-type">
+                            <option value="Lecture">Lecture</option>
+                            <option value="Lab">Lab</option>
+                        </select>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary">Add Subject</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-room" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Room</h3>
+                <span class="close-modal" onclick="closeModal('modal-room')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-room">
+                    <div class="form-group">
+                        <label>Room ID (e.g. R201):</label>
+                        <input type="text" id="new-room-id" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Room Name:</label>
+                        <input type="text" id="new-room-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Capacity:</label>
+                        <input type="number" id="new-room-cap" value="60" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Room Type:</label>
+                        <select id="new-room-type">
+                            <option value="Lecture">Lecture</option>
+                            <option value="Lab">Lab</option>
+                        </select>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary">Add Room</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner-box">
+            <div class="spinner"></div>
+            <h3>Generating Optimal Timetable...</h3>
+            <p>Running Genetic Algorithm & Evaluating Constraints</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
